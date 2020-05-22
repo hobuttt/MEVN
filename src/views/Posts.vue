@@ -12,12 +12,38 @@
           <span>{{post.text}}</span>
         </p>
         <p>
-          <v-icon @click="editPost">edit</v-icon>
+          <v-icon @click="openEditForm(post._id)">edit</v-icon>
           <v-icon color="error" @click="deletePost(post._id)">delete</v-icon>
         </p>
+        <v-row v-show="isEdit&&post._id===selectedPostId">
+          <v-col cols="12" class="text-sm-center">
+            <v-form >
+              <v-text-field
+                label="Post title"
+                :rules="[v => !!v || 'Required.']"
+                hide-details="auto"
+                style="width: 300px; margin: 0 auto"
+                v-model="model.title"
+              />
+              <v-text-field
+                label="Post text"
+                :rules="[v => !!v || 'Required.']"
+                hide-details="auto"
+                style="width: 300px; margin: 20px auto"
+                v-model="model.text"
+              />
+              <v-btn
+                class="mt-6" @click="editPost"
+                :disabled="model.text === '' || model.title === ''"
+              >
+                Edit post
+              </v-btn>
+            </v-form>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
-    <v-row>
+    <v-row v-show="!isEdit">
       <v-col cols="12" class="text-sm-center">
         <v-form >
           <v-text-field
@@ -60,6 +86,8 @@ export default {
       posts: [],
       model: { title: '', text: '' },
       selectedPost: {},
+      selectedPostId: '',
+      isEdit: false,
     };
   },
   mounted() {
@@ -76,9 +104,16 @@ export default {
     },
     async addPost() {
       await PostService.addPost(this.model);
+      this.model = {};
+    },
+    openEditForm(postId) {
+      this.isEdit = !this.isEdit;
+      this.selectedPostId = postId;
+      this.model = {};
     },
     async editPost() {
-      // await PostService.editPost(this.model);
+      this.model.id = this.selectedPostId;
+      await PostService.editPost(this.model);
       console.log('Edited');
     },
     async deletePost(postId) {
